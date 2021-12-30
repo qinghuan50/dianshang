@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper SYSTEM "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.atguigu.gmall.product.mapper.BaseAttrInfoMapper">
+
+    <resultMap id="findAll" type="com.atguigu.gmall.model.product.BaseAttrInfo" autoMapping="true">
+        <id column="id" property="id"/>
+
+        <collection property="attrValueList" ofType="com.atguigu.gmall.model.product.BaseAttrValue" autoMapping="true">
+            <id column="id2" property="id"/>
+        </collection>
+
+    </resultMap>
+
+    <select id="attrInfoList" resultMap="findAll" >
+        SELECT
+            t1.id,
+            t1.attr_name,
+            t1.category_id,
+            t1.category_level,
+            t2.id id2,
+            t2.value_name
+        FROM
+            base_attr_info t1
+            INNER JOIN base_attr_value t2 ON t1.id = t2.attr_id
+        <where>
+            <if test="id1 !=null and id1 != 0" >
+                or (t1.category_level = 1
+                AND t1.category_id = #{id1})
+            </if>
+
+            <if test="id2 !=null and id2 != 0" >
+                or (t1.category_level = 2
+                AND t1.category_id = #{id2})
+            </if>
+
+            <if test="id3 !=null and id3 != 0" >
+                or (t1.category_level = 3
+                AND t1.category_id = #{id3})
+            </if>
+
+        </where>
+
+    </select>
+
+</mapper>
