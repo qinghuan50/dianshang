@@ -2,9 +2,13 @@ package com.atguigu.gmall.product.controller;
 
 import com.atguigu.gmall.common.result.Result;
 import com.atguigu.gmall.model.product.BaseAttrInfo;
+import com.atguigu.gmall.model.product.BaseTrademark;
+import com.atguigu.gmall.model.product.SpuInfo;
 import com.atguigu.gmall.product.service.ManageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/admin/product")
@@ -76,5 +80,49 @@ public class ManageController {
         return Result.ok(manageService.getAttrValueList(id));
     }
 
+    /**
+     * 查询所有的品牌列表
+     * @return
+     */
+    @GetMapping("/baseTrademark/getTrademarkList")
+    public Result getTrademarkList(){
+        return Result.ok(manageService.getTrademarkList());
+    }
+
+    /**
+     * 查询销售属性列表
+     * @return
+     */
+    @GetMapping("/baseSaleAttrList")
+    public Result baseSaleAttrList(){
+        return Result.ok(manageService.baseSaleAttrList());
+    }
+
+    /**
+     * 新增spu商品属性
+     * @param spuInfo
+     * @return
+     */
+    @PostMapping("/saveSpuInfo")
+    public Result saveSpuInfo(@RequestBody SpuInfo spuInfo){
+
+        return Result.ok(manageService.saveSpuInfo(spuInfo));
+    }
+
+    //product/1/10?category3Id=61
+    /**
+     * 分页条件查询所有的spu属性
+     * @param page
+     * @param size
+     * @param category3Id
+     * @return
+     */
+    @GetMapping("/{page}/{size}")
+    public Result findSpuInfoPage(@PathVariable("page") Long page,
+                                  @PathVariable("size") Long size,
+                                  @RequestParam Long category3Id){
+
+        return Result.ok(manageService.findSpuInfoPage(page,size,category3Id));
+    }
 
 }

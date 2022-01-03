@@ -4,6 +4,8 @@ import com.atguigu.gmall.model.product.*;
 import com.atguigu.gmall.product.mapper.*;
 import com.atguigu.gmall.product.service.ManageService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,6 +34,24 @@ public class ManageServiceImpl implements ManageService {
 
     @Resource
     BaseAttrValueMapper baseAttrValueMapper;
+
+    @Resource
+    BaseTradeMarkMapper baseTradeMarkMapper;
+
+    @Resource
+    BaseSaleAttrMapper baseSaleAttrMapper;
+
+    @Resource
+    SpuInfoMapper spuInfoMapper;
+
+    @Resource
+    SpuImageMapper spuImageMapper;
+
+    @Resource
+    SpuSaleAttrMapper spuSaleAttrMapper;
+
+    @Resource
+    SpuSaleAttrValueMapper spuSaleAttrValueMapper;
 
     /**
      * 查询平台属性的一级分类
@@ -158,6 +178,183 @@ public class ManageServiceImpl implements ManageService {
         return baseAttrValueMapper.selectList(new LambdaQueryWrapper<BaseAttrValue>()
                 .eq(BaseAttrValue::getAttrId, id));
     }
+
+    /**
+     * 查询所有的品牌
+     * @return
+     */
+    @Override
+    public List<BaseTrademark> getTrademarkList() {
+
+        return baseTradeMarkMapper.selectList(null);
+    }
+
+    /**
+     * 查询所有的销售属性
+     * @return
+     */
+    @Override
+    public List<BaseSaleAttr> baseSaleAttrList() {
+        return baseSaleAttrMapper.selectList(null);
+    }
+
+    /**
+     * 新增商品spu属性
+     * @param spuInfo
+     * @return
+     */
+    @Override
+    public SpuInfo saveSpuInfo(SpuInfo spuInfo) {
+        //校验表单
+        if (spuInfo == null) {
+            throw new RuntimeException("参数错误！");
+        }
+
+        //判断是否有ID
+        if (spuInfo.getId() == null) {
+            //没有ID则为新增
+            spuInfoMapper.insert(spuInfo);
+
+            //如果为新增，就添加图片spu_image
+            List<SpuImage> spuImages = addSpuImageList(spuInfo.getSpuImageList(), spuInfo.getId());
+
+            //把带有id新的结果覆盖之前的数据
+            spuInfo.setSpuImageList(spuImages);
+
+            //新增销售属性；spu_sale_attr和spu_sale_attr_value；
+            List<SpuSaleAttr> spuSaleAttrs = addSpuSaleAttr(spuInfo.getSpuSaleAttrList(), spuInfo.getId());
+
+            //把带有id新的结果覆盖之前的数据
+            spuInfo.setSpuSaleAttrList(spuSaleAttrs);
+
+            //返回结果
+            return spuInfo;
+        }else {
+
+            //有ID则为修改
+            spuInfoMapper.updateById(spuInfo);
+            //如果为修改，就删除SpuInfo表中的spuSaleAttrList和spuImageList关联的表数据
+            //删除图片
+            spuImageMapper.delete(new LambdaQueryWrapper<SpuImage>()
+                    .eq(SpuImage::getSpuId,spuInfo.getId()));
+
+            //删除商品属性名
+            spuSaleAttrMapper.delete(new LambdaQueryWrapper<SpuSaleAttr>()
+                    .eq(SpuSaleAttr::getSpuId,spuInfo.getId()));
+
+            //删除商品属性名
+            spuSaleAttrValueMapper.delete(new LambdaQueryWrapper<SpuSaleAttrValue>()
+                    .eq(SpuSaleAttrValue::getSpuId,spuInfo.getId()));
+        }
+        //出现问题，则返回空值
+        return null;
+    }
+
+    /**
+     * 分页条件查询所有的spu
+     * @param page
+     * @param size
+     * @return
+     */
+    @Override
+    public IPage<SpuInfo> findSpuInfoPage(Long page, Long size, Long category3Id) {
+        //参数校验
+        //分类ID
+        if (category3Id == null) {
+            throw new RuntimeException("参数错误！");
+        }
+
+        //判断页码
+        if (page == null) {
+            //默认是第一页
+            page = 1L;
+        }
+
+        //判断每页显示的数量
+        if (size == null) {
+            //默认每页显示10条
+            size = 10L;
+        }
+
+        //分页条件查询
+        IPage<SpuInfo> spuInfoIPage = spuInfoMapper.selectPage(new Page<SpuInfo>(page, size),
+                new LambdaQueryWrapper<SpuInfo>()
+                        .eq(SpuInfo::getCategory3Id, category3Id));
+
+        //返回结果
+        return spuInfoIPage;
+    }
+
+    /**
+     * 新增销售属性
+     * @param spuSaleAttrList
+     * @param id
+     * @return
+     */
+    private List<SpuSaleAttr> addSpuSaleAttr(List<SpuSaleAttr> spuSaleAttrList, Long id) {
+
+        List<SpuSaleAttr> saleAttrList = spuSaleAttrList.stream().map(spuSaleAttr -> {
+            //设置spuInfo的id
+            spuSaleAttr.setSpuId(id);
+            //新增销售属性名称的表
+            spuSaleAttrMapper.insert(spuSaleAttr);
+            //设置销售属性值的表
+            List<SpuSaleAttrValue> spuSaleAttrValueList = addSpuSaleAttrValue(spuSaleAttr);
+            //有数据的替换没有数据的，新的替换旧的
+            spuSaleAttr.setSpuSaleAttrValueList(spuSaleAttrValueList);
+            //返回结果
+            return spuSaleAttr;
+        }).collect(Collectors.toList());
+        //返回结果
+        return saleAttrList;
+    }
+
+    /**
+     * 新增销售属性值
+     * @param spuSaleAttr
+     * @return
+     */
+    private List<SpuSaleAttrValue> addSpuSaleAttrValue(SpuSaleAttr spuSaleAttr) {
+
+        //获取销售列表
+        List<SpuSaleAttrValue> spuSaleAttrValueList = spuSaleAttr.getSpuSaleAttrValueList();
+
+        //新增销售值的数据
+        List<SpuSaleAttrValue> saleAttrValues = spuSaleAttrValueList.stream().map(spuSaleAttrValue -> {
+            //设置id
+            spuSaleAttrValue.setSpuId(spuSaleAttr.getSpuId());
+            //设置名字
+            spuSaleAttrValue.setSaleAttrName(spuSaleAttr.getSaleAttrName());
+            //新增
+            spuSaleAttrValueMapper.insert(spuSaleAttrValue);
+            //返回结果
+            return spuSaleAttrValue;
+        }).collect(Collectors.toList());
+        //返回结果
+        return saleAttrValues;
+    }
+
+    /**
+     * 新增图片
+     * @param spuImageList
+     * @param id
+     * @return
+     */
+    private List<SpuImage> addSpuImageList(List<SpuImage> spuImageList, Long id) {
+
+        List<SpuImage> imageList = spuImageList.stream().map(spuImage -> {
+            //把id设置进去
+            spuImage.setSpuId(id);
+            //新增图片
+            spuImageMapper.insert(spuImage);
+
+            return spuImage;
+        }).collect(Collectors.toList());
+
+        return imageList;
+    }
+
+
 }
 
 
