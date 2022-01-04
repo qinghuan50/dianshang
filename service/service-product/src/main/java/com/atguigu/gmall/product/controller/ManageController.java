@@ -1,13 +1,13 @@
 package com.atguigu.gmall.product.controller;
 
+import com.atguigu.gmall.common.constant.ProductConst;
 import com.atguigu.gmall.common.result.Result;
-import com.atguigu.gmall.model.product.BaseAttrInfo;
-import com.atguigu.gmall.model.product.BaseTrademark;
-import com.atguigu.gmall.model.product.SpuInfo;
+import com.atguigu.gmall.model.product.*;
 import com.atguigu.gmall.product.service.ManageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import javax.annotation.Resource;
 import java.util.List;
 
 @RestController
@@ -109,7 +109,6 @@ public class ManageController {
         return Result.ok(manageService.saveSpuInfo(spuInfo));
     }
 
-    //product/1/10?category3Id=61
     /**
      * 分页条件查询所有的spu属性
      * @param page
@@ -123,6 +122,73 @@ public class ManageController {
                                   @RequestParam Long category3Id){
 
         return Result.ok(manageService.findSpuInfoPage(page,size,category3Id));
+    }
+
+    /**
+     * 在spu添加sku中查询销售属性
+     * @param spuId
+     * @return
+     */
+    @GetMapping("/spuSaleAttrList/{spuId}")
+    public Result spuSaleAttrList(@PathVariable("spuId") Long spuId){
+        return Result.ok(manageService.spuSaleAttrList(spuId));
+    }
+
+    /**
+     * 在spu添加sku中查询所有的图片
+     * @param spuId
+     * @return
+     */
+    @GetMapping("/spuImageList/{spuId}")
+    public Result spuImageList(@PathVariable("spuId") Long spuId){
+        return Result.ok(manageService.spuImageList(spuId));
+    }
+
+    /**
+     * 在spu中新增sku信息
+     * @param skuInfo
+     * @return
+     */
+    @PostMapping("/saveSkuInfo")
+    public Result saveSkuInfo(@RequestBody SkuInfo skuInfo){
+        manageService.saveSkuInfo(skuInfo);
+
+        return Result.ok();
+    }
+
+    /**
+     * 分页查询sku销售属性
+     * @param page
+     * @param size
+     * @return
+     */
+    @GetMapping("/list/{page}/{size}")
+    public Result list(@PathVariable("page") Long page,
+                       @PathVariable("size") Long size){
+
+        return Result.ok(manageService.findSkuInfoAll(page,size));
+    }
+
+    /**
+     * 商品上架
+     * @param skuId
+     * @return
+     */
+    @GetMapping("/onSale/{skuId}")
+    public Result onSale(@PathVariable("skuId") Long skuId){
+        manageService.onOrCanceCale(skuId, ProductConst.SKUINFO_STATUS_ONSALE);
+        return Result.ok();
+    }
+
+    /**
+     * 商品下架
+     * @param skuId
+     * @return
+     */
+    @GetMapping("/cancelSale/{skuId}")
+    public Result cancelSale(@PathVariable("skuId") Long skuId){
+        manageService.onOrCanceCale(skuId, ProductConst.SKUINFO_STATUS_CANCESALE);
+        return Result.ok();
     }
 
 }

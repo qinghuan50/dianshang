@@ -2,7 +2,6 @@ package com.atguigu.gmall.product.service;
 
 import com.atguigu.gmall.model.product.*;
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
 import java.util.List;
 
@@ -85,4 +84,41 @@ public interface ManageService {
      * @return
      */
     IPage<SpuInfo> findSpuInfoPage(Long page, Long size, Long category3Id);
+
+    /**
+     * 在spu添加sku中查询所有的销售属性
+     * @param spuId
+     * @return
+     */
+    List<SpuSaleAttr> spuSaleAttrList(Long spuId);
+
+    /**
+     * 在spu添加sku中查询图片
+     * @param spuId
+     * @return
+     */
+    List<SpuImage> spuImageList(Long spuId);
+
+    /**
+     * 新增spu中的sku属性
+     * @param skuInfo
+     * @return
+     */
+    SkuInfo saveSkuInfo(SkuInfo skuInfo);
+
+    /**
+     * 分页查询sku销售属性
+     * @param page
+     * @param size
+     * @return
+     */
+    IPage<SkuInfo> findSkuInfoAll(Long page, Long size);
+
+
+    /**
+     * 上架或者下架
+     * @param skuId
+     * @param status
+     */
+    void onOrCanceCale(Long skuId,Short status);
 }

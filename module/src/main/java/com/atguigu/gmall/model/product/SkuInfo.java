@@ -57,7 +57,7 @@ public class SkuInfo extends BaseEntity {
 
 	@ApiModelProperty(value = "是否销售（1：是 0：否）")
 	@TableField("is_sale")
-	private Integer isSale;
+	private Short isSale;
 
 	@TableField(exist = false)
 	List<SkuImage> skuImageList;

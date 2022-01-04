@@ -53,6 +53,19 @@ public class ManageServiceImpl implements ManageService {
     @Resource
     SpuSaleAttrValueMapper spuSaleAttrValueMapper;
 
+    @Resource
+    SkuInfoMapper skuInfoMapper;
+
+    @Resource
+    SkuImageMapper skuImageMapper;
+
+    @Resource
+    SkuAttrValueMapper skuAttrValueMapper;
+
+    @Resource
+    SkuSaleAttrValueMapper skuSaleAttrValueMapper;
+
+
     /**
      * 查询平台属性的一级分类
      *
@@ -284,6 +297,185 @@ public class ManageServiceImpl implements ManageService {
         //返回结果
         return spuInfoIPage;
     }
+
+    /**
+     * 在spu添加sku中查询所有的销售属性
+     * @param spuId
+     * @return
+     */
+    @Override
+    public List<SpuSaleAttr> spuSaleAttrList(Long spuId) {
+
+        return spuSaleAttrMapper.spuSaleAttrList(spuId);
+    }
+
+    /**
+     * 在spu添加sku中查询图片
+     * @param spuId
+     * @return
+     */
+    @Override
+    public List<SpuImage> spuImageList(Long spuId) {
+         return spuImageMapper.selectList(new LambdaQueryWrapper<SpuImage>()
+                .eq(SpuImage::getSpuId, spuId));
+    }
+
+    /**
+     * 新增spu中的sku属性
+     * @param skuInfo
+     * @return
+     */
+    @Override
+    public SkuInfo saveSkuInfo(SkuInfo skuInfo) {
+        //表单校验
+        if (skuInfo ==null) {
+            throw new RuntimeException("参数错误！");
+        }
+        //判断是否有id
+        if (skuInfo.getId() != null) {
+            //有id为修改
+            int update = skuInfoMapper.updateById(skuInfo);
+
+            if (update <=0) {
+                throw new RuntimeException("修改失败，请重试！");
+            }
+            //删除图片
+            skuImageMapper.delete(new LambdaQueryWrapper<SkuImage>()
+                    .eq(SkuImage::getSkuId,skuInfo.getId()));
+
+            //删除平台属性
+            skuAttrValueMapper.delete(new LambdaQueryWrapper<SkuAttrValue>()
+                    .eq(SkuAttrValue::getSkuId,skuInfo.getId()));
+
+            //删除销售属性
+            skuSaleAttrValueMapper.delete(new LambdaQueryWrapper<SkuSaleAttrValue>()
+                    .eq(SkuSaleAttrValue::getSkuId,skuInfo.getId()));
+        }else {
+            //没有id则为新增
+            int insert = skuInfoMapper.insert(skuInfo);
+            if (insert <= 0) {
+                throw new RuntimeException("新增失败，请重试！");
+            }
+            //新增图片
+            List<SkuImage> skuImageList =
+                    addSkuImages(skuInfo.getSkuImageList(),skuInfo.getId());
+            //用有数据的替换没数据的值
+            skuInfo.setSkuImageList(skuImageList);
+
+            //新增平台属性
+            List<SkuAttrValue> skuAttrValueList =
+                    addSkuAttrValueList(skuInfo.getSkuAttrValueList(), skuInfo.getId());
+            //用有数据的替换没数据的值
+            skuInfo.setSkuAttrValueList(skuAttrValueList);
+
+            //新增销售属性
+            List<SkuSaleAttrValue> skuSaleAttrValueList =
+                    addSkuSaleAttrValueList(skuInfo.getSkuSaleAttrValueList(), skuInfo.getSpuId(), skuInfo.getId());
+            //用有数据的替换没数据的值
+            skuInfo.setSkuSaleAttrValueList(skuSaleAttrValueList);
+
+            //返回结果
+            return skuInfo;
+        }
+        //新增或修改失败则返回null
+        return null;
+    }
+
+    /**
+     * 分页查询sku销售属性
+     * @param page
+     * @param size
+     * @return
+     */
+    @Override
+    public IPage<SkuInfo> findSkuInfoAll(Long page, Long size) {
+        return skuInfoMapper.selectPage(new Page<SkuInfo>(page,size),null);
+    }
+
+    /**
+     * 上架或者下架
+     * @param skuId
+     * @param status
+     */
+    @Override
+    public void onOrCanceCale(Long skuId, Short status) {
+        //校验参数
+        if (skuId == null) {
+            throw new RuntimeException("参数错误！");
+        }
+        //查询商品，判断商品是否存在
+        SkuInfo skuInfo = skuInfoMapper.selectById(skuId);
+
+        if (skuInfo == null || skuInfo.getId() == null) {
+            throw new RuntimeException("该商品不存在！");
+        }
+
+        //修改商品的状态
+        skuInfo.setIsSale(status);
+
+        //更新状态
+        int update = skuInfoMapper.updateById(skuInfo);
+
+        if (update <= 0) {
+            throw new RuntimeException("商品上下架失败！");
+        }
+    }
+
+
+    /**
+     * 在spu中新增sku的销售属性
+     * @param skuSaleAttrValueList
+     * @param spuId
+     * @param skuId
+     * @return
+     */
+    private List<SkuSaleAttrValue> addSkuSaleAttrValueList(List<SkuSaleAttrValue> skuSaleAttrValueList, Long spuId, Long skuId) {
+        return skuSaleAttrValueList.stream().map(skuSaleAttrValue -> {
+            //新增spuId
+            skuSaleAttrValue.setSpuId(skuId);
+            //新增skuId
+            skuSaleAttrValue.setSkuId(skuId);
+            //新增
+            skuSaleAttrValueMapper.insert(skuSaleAttrValue);
+            //返回结果
+            return skuSaleAttrValue;
+        }).collect(Collectors.toList());
+    }
+
+    /**
+     * 在spu中新增sku的平台属性
+     * @param skuAttrValueList
+     * @param id
+     * @return
+     */
+    private List<SkuAttrValue> addSkuAttrValueList(List<SkuAttrValue> skuAttrValueList, Long id) {
+        return skuAttrValueList.stream().map(skuAttrValue -> {
+            //设置id
+            skuAttrValue.setSkuId(id);
+            //新增数据
+            skuAttrValueMapper.insert(skuAttrValue);
+            //返回结果
+            return skuAttrValue;
+        }).collect(Collectors.toList());
+    }
+
+    /**
+     * 在spu中新增sku的图片
+     * @param skuImageList
+     * @param id
+     * @return
+     */
+    private List<SkuImage> addSkuImages(List<SkuImage> skuImageList, Long id) {
+        return skuImageList.stream().map(skuImage -> {
+            //设置id
+            skuImage.setSkuId(id);
+            //新增skuImage
+            skuImageMapper.insert(skuImage);
+            //返回结果
+            return skuImage;
+        }).collect(Collectors.toList());
+    }
+
 
     /**
      * 新增销售属性
