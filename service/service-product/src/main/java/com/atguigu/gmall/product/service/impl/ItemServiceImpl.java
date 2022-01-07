@@ -7,15 +7,19 @@ import com.atguigu.gmall.model.product.SpuSaleAttr;
 import com.atguigu.gmall.product.mapper.*;
 import com.atguigu.gmall.product.service.ItemService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import lombok.extern.log4j.Log4j2;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @Author: wujijun
@@ -24,6 +28,7 @@ import java.util.stream.Collectors;
  * @Modified By:
  */
 @Service
+@Log4j2
 public class ItemServiceImpl implements ItemService {
 
     @Resource
@@ -40,6 +45,13 @@ public class ItemServiceImpl implements ItemService {
 
     @Resource
     SkuSaleAttrValueMapper skuSaleAttrValueMapper;
+
+    @Resource
+    RedissonClient redissonClient;
+
+    @Resource
+    RedisTemplate redisTemplate;
+
 
     /**
      * @param skuId
@@ -68,7 +80,7 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public List<SkuImage> getSkuImages(Long skuId) {
         return skuImageMapper.selectList(new LambdaQueryWrapper<SkuImage>()
-                .eq(SkuImage::getSkuId,skuId));
+                .eq(SkuImage::getSkuId, skuId));
     }
 
     /**
@@ -111,7 +123,7 @@ public class ItemServiceImpl implements ItemService {
      */
     @Override
     public List<SpuSaleAttr> findSaleAttrBySkuIdAndSpuId(Long spuId, Long skuId) {
-        return spuSaleAttrMapper.findSaleAttrBySkuIdAndSpuId(spuId,skuId);
+        return spuSaleAttrMapper.findSaleAttrBySkuIdAndSpuId(spuId, skuId);
     }
 
     /**
@@ -138,10 +150,64 @@ public class ItemServiceImpl implements ItemService {
             //获取values的值
             Object skuValues = map.get("sku_values");
             //把获取到的值加入新的map中
-            hashMap.put(skuValues,skuId);
+            hashMap.put(skuValues, skuId);
         });
         return hashMap;
     }
 
+    /**
+     * @ClassName ItemService
+     * @Description 通过skuInfo查询缓存或者数据库
+     * @Author wujijun
+     * @Date 2022/1/7 19:38
+     * @Param []
+     * @Return com.atguigu.gmall.model.product.SkuInfo
+     */
+    @Override
+    public SkuInfo findSkuInfoFromRedisOrDb(Long skuId) {
+        //校验参数
+        if (skuId == null) {
+            throw new RuntimeException("参数错误！");
+        }
+        //从redis获取skuInfo的信息
+        Object o = redisTemplate.opsForValue().get("sku:" + skuId + ":info");
+        //判断
+        if (o == null) {
+            //若缓存没有数据，则加锁
+            RLock lock = redissonClient.getLock("sku" + skuId + "lock");
+            try {
+                //尝试获取锁
+                try {
+                    if (lock.tryLock(100, 100, TimeUnit.SECONDS)) {
+                        //获取到锁，查询数据库
+                        SkuInfo skuInfo = skuInfoMapper.selectById(skuId);
+                        //判断数据库中是否有该数据
+                        if (skuInfo == null || skuInfo.getId() == null) {
+                            //new一个空的skuInfo
+                            skuInfo = new SkuInfo();
+                            //将虚假的数据存入缓存中，防止缓存穿透
+                            redisTemplate.opsForValue().set("sku:" + skuId + ":info", skuInfo, 5 * 60, TimeUnit.SECONDS);
+                        } else {
+                            //数据库中有数据则存入缓存中
+                            redisTemplate.opsForValue().set("sku:" + skuId + ":info", skuInfo, 24 * 60 * 60, TimeUnit.SECONDS);
+                        }
+                        //返回结果
+                        return skuInfo;
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                    log.error("查询数据时出现了异常！");
+                } finally {
+                    //释放锁
+                    lock.unlock();
+                }
+            }catch (Exception e){
+                e.printStackTrace();
+                log.error("获取锁时发生了异常！");
+            }
+        }
+        //缓存中有数据，则直接返回
+        return (SkuInfo) o;
+    }
 
 }

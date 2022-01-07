@@ -1,5 +1,6 @@
 package com.atguigu.gmall.product.controller;
 
+import com.atguigu.gmall.common.cache.GmallCache;
 import com.atguigu.gmall.model.product.BaseCategoryView;
 import com.atguigu.gmall.model.product.SkuImage;
 import com.atguigu.gmall.model.product.SkuInfo;
@@ -36,6 +37,7 @@ public class ItemController {
      * @Param [skuId]
      * @Return com.atguigu.gmall.model.product.SkuInfo
      */
+    @GmallCache(prefix = "getSkuInfo:")
     @GetMapping("/getSkuInfo/{skuId}")
     public SkuInfo getSkuInfo(@PathVariable("skuId") Long skuId){
         return itemService.getSkuInfo(skuId);
@@ -49,6 +51,7 @@ public class ItemController {
      * @Param [skuId]
      * @Return java.util.List<com.atguigu.gmall.model.product.SkuImage>
      */
+    @GmallCache(prefix = "getSkuImages:")
     @GetMapping("/getSkuImages/{skuId}")
     public List<SkuImage> getSkuImages(@PathVariable("skuId") Long skuId){
         return itemService.getSkuImages(skuId);
@@ -62,6 +65,7 @@ public class ItemController {
      * @Param [skuId]
      * @Return java.math.BigDecimal
      */
+    @GmallCache(prefix = "getPrice:")
     @GetMapping("/getPrice/{skuId}")
     public BigDecimal getPrice(@PathVariable("skuId") Long skuId) {
         return itemService.getPrice(skuId);
@@ -75,6 +79,7 @@ public class ItemController {
      * @Param [c3Id]
      * @Return com.atguigu.gmall.model.product.BaseCategoryView
      */
+    @GmallCache(prefix = "getBaseCategory:")
     @GetMapping("/getBaseCategory/{c3Id}")
     public BaseCategoryView getBaseCategory(@PathVariable("c3Id") Long c3Id){
         return itemService.getBaseCategory(c3Id);
@@ -88,6 +93,7 @@ public class ItemController {
      * @Param [spuId, skuId]
      * @Return java.util.List<com.atguigu.gmall.model.product.SpuSaleAttr>
      */
+    @GmallCache(prefix = "findSaleAttrBySkuIdAndSpuId:")
     @GetMapping("/findSaleAttrBySkuIdAndSpuId/{spuId}/{skuId}")
     public List<SpuSaleAttr> findSaleAttrBySkuIdAndSpuId(@PathVariable("spuId") Long spuId,
                                                          @PathVariable("skuId") Long skuId){
@@ -102,6 +108,7 @@ public class ItemController {
      * @Param [spuId]
      * @Return java.util.Map
      */
+    @GmallCache(prefix = "getSaleAttrValue:")
     @GetMapping("/getSaleAttrValue/{spuId}")
     public Map getSaleAttrValue(@PathVariable("spuId") Long spuId){
         return itemService.getSaleAttrValue(spuId);

@@ -4,7 +4,6 @@ import com.atguigu.gmall.model.product.BaseCategoryView;
 import com.atguigu.gmall.model.product.SkuImage;
 import com.atguigu.gmall.model.product.SkuInfo;
 import com.atguigu.gmall.model.product.SpuSaleAttr;
-import org.apache.ibatis.annotations.Param;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -77,6 +76,16 @@ public interface ItemService {
      * @Return Map
      */
     Map getSaleAttrValue(Long spuId);
+
+    /**
+     * @ClassName ItemService
+     * @Description 通过skuInfo查询缓存或者数据库
+     * @Author wujijun
+     * @Date 2022/1/7 19:38
+     * @Param []
+     * @Return com.atguigu.gmall.model.product.SkuInfo
+     */
+    SkuInfo findSkuInfoFromRedisOrDb(Long skuId);
 
 
 
