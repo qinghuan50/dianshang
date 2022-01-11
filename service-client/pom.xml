@@ -15,6 +15,7 @@
     <description>微服务feign父工程的定义模块</description>
     <modules>
         <module>service-product-client</module>
+        <module>service-item-client</module>
     </modules>
 
     <dependencies>

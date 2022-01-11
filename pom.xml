@@ -15,6 +15,7 @@
         <module>service-client</module>
         <module>service-product-client</module>
         <module>service-product-client</module>
+        <module>web</module>
     </modules>
 
     <parent>

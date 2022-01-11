@@ -1,6 +1,8 @@
 package com.atguigu.gmall.product.controller;
 
+import com.alibaba.fastjson.JSONObject;
 import com.atguigu.gmall.common.cache.GmallCache;
+import com.atguigu.gmall.common.result.Result;
 import com.atguigu.gmall.model.product.BaseCategoryView;
 import com.atguigu.gmall.model.product.SkuImage;
 import com.atguigu.gmall.model.product.SkuInfo;
@@ -112,6 +114,20 @@ public class ItemController {
     @GetMapping("/getSaleAttrValue/{spuId}")
     public Map getSaleAttrValue(@PathVariable("spuId") Long spuId){
         return itemService.getSaleAttrValue(spuId);
+    }
+
+    /**
+     * @ClassName ItemController
+     * @Description 查询首页的所有分类信息
+     * @Author wujijun
+     * @Date 2022/1/11 22:21
+     * @Param []
+     * @Return com.alibaba.fastjson.JSONObject
+     */
+    @GetMapping("/getIndexCategory")
+    @GmallCache(prefix = "getIndexCategory:")
+    public Result getIndexCategory(){
+        return Result.ok(itemService.getIndexCategory());
     }
 
 

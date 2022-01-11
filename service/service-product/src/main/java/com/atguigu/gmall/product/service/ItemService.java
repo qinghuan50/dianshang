@@ -1,5 +1,6 @@
 package com.atguigu.gmall.product.service;
 
+import com.alibaba.fastjson.JSONObject;
 import com.atguigu.gmall.model.product.BaseCategoryView;
 import com.atguigu.gmall.model.product.SkuImage;
 import com.atguigu.gmall.model.product.SkuInfo;
@@ -86,6 +87,17 @@ public interface ItemService {
      * @Return com.atguigu.gmall.model.product.SkuInfo
      */
     SkuInfo findSkuInfoFromRedisOrDb(Long skuId);
+
+    /**
+     * @ClassName ItemService
+     * @Description 获取首页分类信息
+     * @Author wujijun
+     * @Date 2022/1/11 20:29
+     * @Param []
+     * @Return void
+     * @return
+     */
+    List<JSONObject> getIndexCategory();
 
 
 
