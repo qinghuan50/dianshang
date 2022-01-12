@@ -18,7 +18,8 @@
             t1.category_id,
             t1.category_level,
             t2.id id2,
-            t2.value_name
+            t2.value_name,
+            t2.attr_id
         FROM
             base_attr_info t1
             INNER JOIN base_attr_value t2 ON t1.id = t2.attr_id
@@ -27,19 +28,35 @@
                 or (t1.category_level = 1
                 AND t1.category_id = #{id1})
             </if>
-
             <if test="id2 !=null and id2 != 0" >
                 or (t1.category_level = 2
                 AND t1.category_id = #{id2})
             </if>
-
             <if test="id3 !=null and id3 != 0" >
                 or (t1.category_level = 3
                 AND t1.category_id = #{id3})
             </if>
-
         </where>
-
     </select>
+
+    <select id="selectSkuInfoBySkuId" resultMap="findAll">
+        SELECT
+            t1.id,
+            t1.attr_name,
+            t1.category_id,
+            t1.category_level,
+            t2.id id2,
+            t2.value_name,
+            t2.attr_id
+        FROM
+            base_attr_info t1
+            INNER JOIN base_attr_value t2 ON t1.id = t2.attr_id
+            INNER JOIN sku_attr_value t3 ON t3.attr_id = t1.id
+            AND t3.value_id = t2.id
+        WHERE
+            t3.sku_id =#{skuId}
+    </select>
+
+
 
 </mapper>

@@ -1,10 +1,7 @@
 package com.atguigu.gmall.product.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
-import com.atguigu.gmall.model.product.BaseCategoryView;
-import com.atguigu.gmall.model.product.SkuImage;
-import com.atguigu.gmall.model.product.SkuInfo;
-import com.atguigu.gmall.model.product.SpuSaleAttr;
+import com.atguigu.gmall.model.product.*;
 import com.atguigu.gmall.product.mapper.*;
 import com.atguigu.gmall.product.service.ItemService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -53,6 +50,12 @@ public class ItemServiceImpl implements ItemService {
 
     @Resource
     RedisTemplate redisTemplate;
+
+    @Resource
+    BaseTradeMarkMapper baseTradeMarkMapper;
+
+    @Resource
+    BaseAttrInfoMapper baseAttrInfoMapper;
 
 
     /**
@@ -287,6 +290,33 @@ public class ItemServiceImpl implements ItemService {
        }
        //返回封装好的一级分类
         return category1JsonList;
+    }
+
+    /**
+     * @ClassName ItemService
+     * @Description 根据品牌的ID查询品牌信息
+     * @Author wujijun
+     * @Date 2022/1/12 11:06
+     * @Param []
+     * @Return com.atguigu.gmall.model.product.BaseTrademark
+     */
+    @Override
+    public BaseTrademark getBaseTrademark(Long id) {
+        return baseTradeMarkMapper.selectById(id);
+    }
+
+    /**
+     * @param skuId
+     * @ClassName ItemService
+     * @Description 查询商品的平台属性
+     * @Author wujijun
+     * @Date 2022/1/12 11:43
+     * @Param [skuId]
+     * @Return java.util.List<com.atguigu.gmall.model.product.BaseAttrInfo>
+     */
+    @Override
+    public List<BaseAttrInfo> selectSkuInfoBySkuId(Long skuId) {
+        return baseAttrInfoMapper.selectSkuInfoBySkuId(skuId);
     }
 
 }

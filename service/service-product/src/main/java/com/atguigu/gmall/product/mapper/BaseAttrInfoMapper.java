@@ -19,4 +19,14 @@ public interface BaseAttrInfoMapper extends BaseMapper<BaseAttrInfo> {
                                     @Param("id3") Long id3);
 
 
+    /**
+     * @ClassName BaseAttrInfoMapper
+     * @Description 查询商品的平台属性
+     * @Author wujijun
+     * @Date 2022/1/12 11:42
+     * @Param [skuId]
+     * @Return java.util.List<com.atguigu.gmall.model.product.BaseAttrInfo>
+     */
+    List<BaseAttrInfo> selectSkuInfoBySkuId(@Param("skuId") Long skuId);
+
 }

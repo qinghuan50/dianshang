@@ -10,7 +10,7 @@ import java.util.Date;
 import java.util.List;
 
 @Data
-@Document(indexName = "goods" ,type = "info",shards = 3,replicas = 2)
+@Document(indexName = "goods-wjj" ,type = "info",shards = 3,replicas = 2)
 public class Goods {
     // 商品Id
     @Id

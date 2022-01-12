@@ -1,4 +1,4 @@
-package com.atguiug.gmall.item.feign;
+package com.atguigu.gmall.item.feign;
 
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;

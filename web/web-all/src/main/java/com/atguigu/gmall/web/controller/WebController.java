@@ -1,6 +1,6 @@
 package com.atguigu.gmall.web.controller;
 
-import com.atguiug.gmall.item.feign.ItemFeign;
+import com.atguigu.gmall.item.feign.ItemFeign;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;

@@ -170,7 +170,7 @@ public class ManageController {
     }
 
     /**
-     * 商品上架
+     * 商品上架：将商品的信息存入elasticsearch中
      * @param skuId
      * @return
      */
@@ -181,7 +181,7 @@ public class ManageController {
     }
 
     /**
-     * 商品下架
+     * 商品下架：将商品的信息从elasticsearch删除
      * @param skuId
      * @return
      */

@@ -1,10 +1,8 @@
 package com.atguigu.gmall.product.service;
 
 import com.alibaba.fastjson.JSONObject;
-import com.atguigu.gmall.model.product.BaseCategoryView;
-import com.atguigu.gmall.model.product.SkuImage;
-import com.atguigu.gmall.model.product.SkuInfo;
-import com.atguigu.gmall.model.product.SpuSaleAttr;
+import com.atguigu.gmall.model.product.*;
+import org.apache.ibatis.annotations.Param;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -99,7 +97,25 @@ public interface ItemService {
      */
     List<JSONObject> getIndexCategory();
 
+    /**
+     * @ClassName ItemService
+     * @Description 根据品牌的ID查询品牌信息
+     * @Author wujijun
+     * @Date 2022/1/12 11:06
+     * @Param []
+     * @Return com.atguigu.gmall.model.product.BaseTrademark
+     */
+    BaseTrademark getBaseTrademark(Long id);
 
 
+    /**
+     * @ClassName ItemService
+     * @Description 查询商品的平台属性
+     * @Author wujijun
+     * @Date 2022/1/12 11:43
+     * @Param [skuId]
+     * @Return java.util.List<com.atguigu.gmall.model.product.BaseAttrInfo>
+     */
+    List<BaseAttrInfo> selectSkuInfoBySkuId( Long skuId);
 
 }

@@ -3,10 +3,7 @@ package com.atguigu.gmall.product.controller;
 import com.alibaba.fastjson.JSONObject;
 import com.atguigu.gmall.common.cache.GmallCache;
 import com.atguigu.gmall.common.result.Result;
-import com.atguigu.gmall.model.product.BaseCategoryView;
-import com.atguigu.gmall.model.product.SkuImage;
-import com.atguigu.gmall.model.product.SkuInfo;
-import com.atguigu.gmall.model.product.SpuSaleAttr;
+import com.atguigu.gmall.model.product.*;
 import com.atguigu.gmall.product.service.ItemService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -128,6 +125,32 @@ public class ItemController {
     @GmallCache(prefix = "getIndexCategory:")
     public Result getIndexCategory(){
         return Result.ok(itemService.getIndexCategory());
+    }
+
+  /**
+   * @ClassName ItemController
+   * @Description 根据品牌的ID查询品牌信息
+   * @Author wujijun
+   * @Date 2022/1/12 11:13
+   * @Param [id]
+   * @Return com.atguigu.gmall.model.product.BaseTrademark
+   */
+    @GetMapping("/getBaseTrademark/{id}")
+    public BaseTrademark getBaseTrademark(@PathVariable("id") Long id){
+        return itemService.getBaseTrademark(id);
+    }
+
+    /**
+     * @ClassName ItemController
+     * @Description 查询商品的平台属性
+     * @Author wujijun
+     * @Date 2022/1/12 11:47
+     * @Param [skuId]
+     * @Return com.atguigu.gmall.model.product.BaseAttrInfo
+     */
+    @GetMapping("/selectSkuInfoBySkuId/{skuId}")
+    public List<BaseAttrInfo> selectSkuInfoBySkuId(@PathVariable("skuId")Long skuId){
+        return itemService.selectSkuInfoBySkuId(skuId);
     }
 
 

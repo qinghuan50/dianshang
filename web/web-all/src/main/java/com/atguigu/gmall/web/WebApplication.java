@@ -13,7 +13,7 @@ import org.springframework.context.annotation.ComponentScan;
  */
 @SpringBootApplication
 @EnableDiscoveryClient
-@EnableFeignClients("com.atguiug.gmall.item.feign")
+@EnableFeignClients("com.atguigu.gmall.item.feign")
 @ComponentScan("com.atguigu.gmall")
 public class WebApplication {
 
