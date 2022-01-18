@@ -3,10 +3,12 @@ package com.atguigu.gmall.cart.service.impl;
 import com.atguigu.gmall.cart.mapper.CartInfMapper;
 import com.atguigu.gmall.cart.service.CartInfoService;
 import com.atguigu.gmall.cart.util.GmallThreadLocalUtils;
+import com.atguigu.gmall.common.constant.CartConst;
 import com.atguigu.gmall.model.cart.CartInfo;
 import com.atguigu.gmall.model.product.SkuInfo;
 import com.atguigu.gmall.product.feign.ProductFeign;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.google.common.util.concurrent.AtomicDouble;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,6 +16,10 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 /**
  * @Author: wujijun
@@ -181,5 +187,78 @@ public class CartInfoServiceImpl implements CartInfoService {
             //新增购物车数据
             this.addCart(cartInfo.getSkuId(), cartInfo.getSkuNum());
         });
+    }
+
+    /**
+     * @ClassName CartInfoService
+     * @Description 获取下单中的购物车信息
+     * @Author wujijun
+     * @Date 2022/1/18 20:32
+     * @Param []
+     * @Return java.util.List<com.atguigu.gmall.model.cart.CartInfo>
+     */
+    @Override
+    public Map<String, Object> getCartForOrder() {
+        //初始化一个返回结果的对象
+        Map<String, Object> resultMap = new ConcurrentHashMap<>();
+        //获取用户名，通过本地线程保存的令牌中获取
+        String username = GmallThreadLocalUtils.getUserName();
+        //查询订单中的购物车，通过用户名和选中的商品
+        List<CartInfo> cartInfos = cartInfMapper.selectList(new LambdaQueryWrapper<CartInfo>()
+                .eq(CartInfo::getUserId, username)
+                .eq(CartInfo::getIsChecked, CartConst.CART_STATUS_ONCHECKED));
+        //判断订单中是否有商品
+        if (cartInfos == null || cartInfos.isEmpty()) {
+            throw new RuntimeException("未选中商品下单！");
+        }
+        //计算数量和价格之前先初始化
+        AtomicInteger totalNum = new AtomicInteger(0);
+        AtomicDouble totalMoney = new AtomicDouble(0);
+        //计算商品的数量以及总金额
+        List<CartInfo> cartInfoList = cartInfos.stream().map(cartInfo -> {
+            //获取商品的数量
+            Integer skuNum = cartInfo.getSkuNum();
+            //合计所有的商品的数量 i++
+            totalNum.getAndAdd(skuNum);
+            //获取购物车中每一个商品的id
+            Long skuId = cartInfo.getSkuId();
+            //通过商品的id，获取商品的实时价格
+            BigDecimal price = productFeign.getPrice(skuId);
+            //把商品的实时价格存入cartInfo中
+            cartInfo.setSkuPrice(price);
+            //计算购物车的总金额
+            totalMoney.getAndAdd(price.doubleValue() * skuNum);
+            //返回结果
+            return cartInfo;
+        }).collect(Collectors.toList());
+        //存入订单中的商品数量
+        resultMap.put("totalNum", totalNum);
+        //存入订单的总金额
+        resultMap.put("totalMoney", totalMoney);
+        //存入商品列表
+        resultMap.put("cartInfoList", cartInfoList);
+        //返回结果
+        return resultMap;
+    }
+
+    /**
+     * @ClassName CartInfoService
+     * @Description 下单完成后清除订单中购物车中的数据
+     * @Author wujijun
+     * @Date 2022/1/18 23:28
+     * @Param []
+     * @Return void
+     * @return
+     */
+    @Override
+    public Boolean removeCart() {
+        //获取登录的用户名
+        String username = GmallThreadLocalUtils.getUserName();
+        //清除购物车
+        int delete = cartInfMapper.delete(new LambdaQueryWrapper<CartInfo>()
+                .eq(CartInfo::getUserId, username)
+                .eq(CartInfo::getIsChecked, CartConst.CART_STATUS_ONCHECKED));
+
+        return delete>0?true:false;
     }
 }

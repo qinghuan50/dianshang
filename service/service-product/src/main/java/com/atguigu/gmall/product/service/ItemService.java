@@ -118,4 +118,14 @@ public interface ItemService {
      */
     List<BaseAttrInfo> selectSkuInfoBySkuId( Long skuId);
 
+    /**
+     * @ClassName ItemService
+     * @Description 生成订单后删除库存
+     * @Author wujijun
+     * @Date 2022/1/18 23:59
+     * @Param [orderDetails]
+     * @Return java.lang.Boolean
+     */
+    Boolean delCountStock(Map<String, Object> orderDetails);
+
 }

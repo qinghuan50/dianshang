@@ -35,7 +35,7 @@ public class OrderInfo extends BaseEntity {
 
     @ApiModelProperty(value = "用户id")
     @TableField("user_id")
-    private Long userId;
+    private String userId;
 
     @ApiModelProperty(value = "付款方式")
     @TableField("payment_way")

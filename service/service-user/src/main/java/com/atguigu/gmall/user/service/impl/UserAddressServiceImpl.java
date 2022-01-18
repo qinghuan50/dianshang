@@ -3,6 +3,7 @@ package com.atguigu.gmall.user.service.impl;
 import com.atguigu.gmall.model.user.UserAddress;
 import com.atguigu.gmall.user.mapper.UserAddressMapper;
 import com.atguigu.gmall.user.service.UserAddressService;
+import com.atguigu.gmall.user.util.GmallThreadLocalUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -22,7 +23,6 @@ public class UserAddressServiceImpl implements UserAddressService {
     UserAddressMapper userAddressMapper;
 
     /**
-     * @param username
      * @ClassName UserService
      * @Description 通过用户名查询用户的收获地址
      * @Author wujijun
@@ -31,7 +31,9 @@ public class UserAddressServiceImpl implements UserAddressService {
      * @Return java.util.List<com.atguigu.gmall.model.user.UserAddress>
      */
     @Override
-    public List<UserAddress> getUserAddress(String username) {
+    public List<UserAddress> getUserAddress() {
+        //获取用户名
+        String username = GmallThreadLocalUtils.getUserName();
         return userAddressMapper.selectList(new LambdaQueryWrapper<UserAddress>()
                 .eq(UserAddress::getUserId,username));
     }

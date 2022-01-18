@@ -19,5 +19,5 @@ public interface UserAddressService {
      * @Param [username]
      * @Return java.util.List<com.atguigu.gmall.model.user.UserAddress>
      */
-    List<UserAddress> getUserAddress(String username);
+    List<UserAddress> getUserAddress();
 }

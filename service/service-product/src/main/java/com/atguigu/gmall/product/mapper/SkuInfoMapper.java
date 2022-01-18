@@ -6,6 +6,7 @@ import com.atguigu.gmall.model.product.SpuSaleAttr;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Update;
 
 import java.util.List;
 
@@ -15,4 +16,14 @@ import java.util.List;
 @Mapper
 public interface SkuInfoMapper extends BaseMapper<SkuInfo> {
 
+    /**
+     * @ClassName SkuInfoMapper
+     * @Description 使用乐观锁，扣减库存
+     * @Author wujijun
+     * @Date 2022/1/19 0:20
+     * @Param [skuId, num]
+     * @Return int
+     */
+    @Update("UPDATE sku_info SET stock = stock - #{num} WHERE id = #{skuId} AND stock >= #{num};")
+    int delCountStock(@Param("skuId") Long skuId, @Param("num") Integer num);
 }

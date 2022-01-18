@@ -6,10 +6,7 @@ import com.atguigu.gmall.common.result.Result;
 import com.atguigu.gmall.model.product.*;
 import com.atguigu.gmall.product.service.ItemService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -151,6 +148,19 @@ public class ItemController {
     @GetMapping("/selectSkuInfoBySkuId/{skuId}")
     public List<BaseAttrInfo> selectSkuInfoBySkuId(@PathVariable("skuId")Long skuId){
         return itemService.selectSkuInfoBySkuId(skuId);
+    }
+
+    /**
+     * @ClassName ItemController
+     * @Description 生成订单后删除订单中的商品库存
+     * @Author wujijun
+     * @Date 2022/1/19 0:30
+     * @Param [orderDetails]
+     * @Return java.lang.Boolean
+     */
+    @GetMapping("/delCountStock")
+    public Boolean delCountStock(@RequestParam Map<String, Object> orderDetails){
+        return itemService.delCountStock(orderDetails);
     }
 
 

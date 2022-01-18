@@ -3,6 +3,7 @@ package com.atguigu.gmall.cart.service;
 import com.atguigu.gmall.model.cart.CartInfo;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @Author: wujijun
@@ -60,4 +61,25 @@ public interface CartInfoService {
      * @Return void
      */
     void mergeCart(List<CartInfo> cartInfoList);
+
+    /**
+     * @ClassName CartInfoService
+     * @Description 获取下单中的购物车信息
+     * @Author wujijun
+     * @Date 2022/1/18 20:32
+     * @Param []
+     * @Return java.util.List<com.atguigu.gmall.model.cart.CartInfo>
+     */
+    Map<String, Object> getCartForOrder();
+
+    /**
+     * @ClassName CartInfoService
+     * @Description 下单完成后清除订单中购物车中的数据
+     * @Author wujijun
+     * @Date 2022/1/18 23:28
+     * @Param []
+     * @Return void
+     * @return
+     */
+    Boolean removeCart();
 }

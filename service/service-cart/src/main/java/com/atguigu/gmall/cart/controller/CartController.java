@@ -113,4 +113,17 @@ public class CartController {
         cartInfoService.mergeCart(cartInfoList);
         return Result.ok();
     }
+
+    /**
+     * @ClassName CartController
+     * @Description 获取下单后购物车中的商品
+     * @Author wujijun
+     * @Date 2022/1/18 20:41
+     * @Param []
+     * @Return com.atguigu.gmall.common.result.Result
+     */
+    @GetMapping("/getCartForOrder")
+    public Result getCartForOrder(){
+        return Result.ok(cartInfoService.getCartForOrder());
+    }
 }

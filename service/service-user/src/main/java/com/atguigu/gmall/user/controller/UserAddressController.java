@@ -31,8 +31,8 @@ public class UserAddressController {
      */
     @GetMapping("/getUserAddress")
     public Result getUserAddress(){
-        String username = "qh";
-        return Result.ok(userAddressService.getUserAddress(username));
+//        String username = "wujijun";
+        return Result.ok(userAddressService.getUserAddress());
     }
 
 }

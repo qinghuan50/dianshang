@@ -319,4 +319,58 @@ public class ItemServiceImpl implements ItemService {
         return baseAttrInfoMapper.selectSkuInfoBySkuId(skuId);
     }
 
+    /**
+     * @param orderDetails
+     * @ClassName ItemService
+     * @Description 生成订单后删除库存
+     * @Author wujijun
+     * @Date 2022/1/18 23:59
+     * @Param [orderDetails]
+     * @Return java.lang.Boolean
+     */
+    @Override
+    public Boolean delCountStock(Map<String, Object> orderDetails) {
+        //检验参数
+        if (orderDetails == null || orderDetails.isEmpty()) {
+            return false;
+        }
+        //遍历orderDetails，根据新增的订单详情删减库存
+        for (Map.Entry<String, Object> entry : orderDetails.entrySet()) {
+            //获取商品的id
+            Long skuId = Long.parseLong(entry.getKey());
+            //获取商品的数量
+            int skuNum = Integer.parseInt(entry.getValue().toString());
+            //扣减库存
+            int i = skuInfoMapper.delCountStock(skuId, skuNum);
+            //判断是否扣减库存成功（有库存扣减失败或者没有库存扣减失败）
+            if (i <= 0){
+                return false;
+            }
+
+//            //查询商品的信息----存在时间差，会导致超卖
+//            SkuInfo skuInfo = skuInfoMapper.selectById(skuId);
+//            //判断是否有该商品
+//            if (skuInfo == null || skuInfo.getId() == null) {
+//                return false;
+//            }
+//            //扣减库存
+//            skuNum = skuInfo.getStock() - skuNum;
+//            //判断库存
+//            if (skuNum < 0) {
+//                return false;
+//            }
+//            //把最新的库存设置进去
+//            skuInfo.setStock(skuNum);
+//            //更新库存
+//            int i = skuInfoMapper.updateById(skuInfo);
+//            //判断更新成功
+//            if (i <= 0) {
+//                return false;
+//            }
+        }
+        //返回结果
+        return null;
+    }
+
+
 }

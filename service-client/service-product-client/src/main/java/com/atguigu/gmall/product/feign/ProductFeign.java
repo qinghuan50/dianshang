@@ -4,6 +4,7 @@ import com.atguigu.gmall.model.product.*;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -106,6 +107,17 @@ public interface ProductFeign {
      */
     @GetMapping("/selectSkuInfoBySkuId/{skuId}")
     List<BaseAttrInfo> selectSkuInfoBySkuId(@PathVariable("skuId")Long skuId);
+
+    /**
+     * @ClassName ItemController
+     * @Description 生成订单后删除订单中的商品库存
+     * @Author wujijun
+     * @Date 2022/1/19 0:30
+     * @Param [orderDetails]
+     * @Return java.lang.Boolean
+     */
+    @GetMapping("/delCountStock")
+    Boolean delCountStock(@RequestParam Map<String, Object> orderDetails);
 
 
 }
