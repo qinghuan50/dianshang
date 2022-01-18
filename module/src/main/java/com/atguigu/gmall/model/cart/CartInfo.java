@@ -39,7 +39,7 @@ public class CartInfo extends BaseEntity {
 
     @ApiModelProperty(value = "isChecked")
     @TableField("is_checked")
-    private Integer isChecked = 1;
+    private Short isChecked = 1;
 
     // 实时价格 skuInfo.price
     @TableField(exist = false)

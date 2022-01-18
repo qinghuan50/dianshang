@@ -20,7 +20,7 @@ public class UserAddress extends BaseEntity {
 
     @ApiModelProperty(value = "用户id")
     @TableField("user_id")
-    private Long userId;
+    private String userId;
 
     @ApiModelProperty(value = "收件人")
     @TableField("consignee")
