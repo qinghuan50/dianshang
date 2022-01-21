@@ -15,7 +15,7 @@ import org.springframework.context.annotation.ComponentScan;
 @SpringBootApplication
 @EnableDiscoveryClient
 @ComponentScan("com.atguigu.gmall")
-@EnableFeignClients({"com.atguigu.gmall.cart.feign", "com.atguigu.gmall.product.feign"})
+@EnableFeignClients({"com.atguigu.gmall.cart.feign", "com.atguigu.gmall.product.feign", "com.atguigu.gmall.pay.fegn"})
 @ServletComponentScan("com.atguigu.gmall.order.filter")
 public class OrderApplication {
     public static void main(String[] args) {

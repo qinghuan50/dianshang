@@ -10,6 +10,7 @@ import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
@@ -28,6 +29,7 @@ import java.util.stream.Collectors;
  */
 @Service
 @Log4j2
+@Transactional(rollbackFor = Exception.class)
 public class ItemServiceImpl implements ItemService {
 
     @Resource
@@ -344,7 +346,7 @@ public class ItemServiceImpl implements ItemService {
             int i = skuInfoMapper.delCountStock(skuId, skuNum);
             //判断是否扣减库存成功（有库存扣减失败或者没有库存扣减失败）
             if (i <= 0){
-                return false;
+                throw new RuntimeException("扣减库存失败！");
             }
 
 //            //查询商品的信息----存在时间差，会导致超卖
@@ -370,6 +372,33 @@ public class ItemServiceImpl implements ItemService {
         }
         //返回结果
         return null;
+    }
+
+    /**
+     * @param orderDetails
+     * @ClassName ItemService
+     * @Description 取消订单，回滚库存
+     * @Author wujijun
+     * @Date 2022/1/20 23:50
+     * @Param [orderDetails]
+     * @Return java.lang.Boolean
+     */
+    @Override
+    public Boolean rollBackStock(Map<String, Object> orderDetails) {
+        //遍历需要回滚的商品
+        for (Map.Entry<String, Object> entry : orderDetails.entrySet()) {
+            //获取商品的id
+            Long skuId = Long.parseLong(entry.getKey());
+            //获取商品的数量
+            int skuNum = Integer.parseInt(entry.getValue().toString());
+            //回滚库存
+            int i = skuInfoMapper.rollBackStock(skuId, skuNum);
+            //判断是否回滚成功
+            if (i <= 0) {
+                throw new RuntimeException("库存回滚失败！");
+            }
+        }
+        return true;
     }
 
 

@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.atguigu.gmall.cart.feign.CartFeign;
 import com.atguigu.gmall.model.cart.CartInfo;
 import com.atguigu.gmall.model.enums.OrderStatus;
+import com.atguigu.gmall.model.enums.PaymentType;
 import com.atguigu.gmall.model.enums.ProcessStatus;
 import com.atguigu.gmall.model.order.OrderDetail;
 import com.atguigu.gmall.model.order.OrderInfo;
@@ -12,6 +13,13 @@ import com.atguigu.gmall.order.mapper.OrderInfoMapper;
 import com.atguigu.gmall.order.service.OrderInfoService;
 import com.atguigu.gmall.order.util.GmallThreadLocalUtils;
 import com.atguigu.gmall.product.feign.ProductFeign;
+import com.atguigu.gmall.pay.fegn.PayFeign;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import org.springframework.amqp.AmqpException;
+import org.springframework.amqp.core.Message;
+import org.springframework.amqp.core.MessagePostProcessor;
+import org.springframework.amqp.core.MessageProperties;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -48,6 +56,12 @@ public class OrderInfoServiceImpl implements OrderInfoService {
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
 
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
+
+    @Autowired
+    private PayFeign payFeign;
+
     /**
      * @param orderInfo
      * @return
@@ -59,7 +73,7 @@ public class OrderInfoServiceImpl implements OrderInfoService {
      * @Return void
      */
     @Override
-    public OrderInfo addOrder(OrderInfo orderInfo) {
+    public String addOrder(OrderInfo orderInfo) {
         //校验参数
         if (orderInfo == null) {
             throw new RuntimeException("参数错误，创建订单失败！");
@@ -101,8 +115,26 @@ public class OrderInfoServiceImpl implements OrderInfoService {
             productFeign.delCountStock(orderDetails);
             //生成订单后，请求购物车数据
             cartFeign.removeCart();
-            //超时未付款
-
+            //超时未付款--30分钟后自动过期
+            rabbitTemplate.convertAndSend("normal_exchange",
+                    "order.timeout",
+                    orderInfo.getId() + "",
+                    new MessagePostProcessor() {
+                        @Override
+                        public Message postProcessMessage(Message message) throws AmqpException {
+                            //获取消息的属性
+                            MessageProperties messageProperties = message.getMessageProperties();
+                            //设置消息的过期时间(半小时过期)，测试可以设置时间短点（10s）
+                            messageProperties.setExpiration("10000");
+                            return message;
+                        }
+                    });
+            //调用支付微服务的接口，获取支付的二维码
+            String wxPayUrl = payFeign.getWxPayUrl("订单的描述：wujijun",
+                    orderInfo.getId() + "",
+                    totalMoney * 100 + "");
+            //返回二维码的地址
+            return wxPayUrl;
         } catch (Exception e) {
             e.printStackTrace();
             throw new RuntimeException("生成订单失败！");
@@ -110,8 +142,115 @@ public class OrderInfoServiceImpl implements OrderInfoService {
             //删除缓存中设置的重读提交的数据（标识位）
             stringRedisTemplate.delete("User_Cart_Lock_" + username);
         }
-        //返回结果
-        return orderInfo;
+    }
+
+    /**
+     * @param orderId
+     * @param status
+     * @ClassName OrderInfoService
+     * @Description 取消订单
+     * @Author wujijun
+     * @Date 2022/1/20 22:55
+     * @Param [orderId, status；主动取消，超时取消]
+     * @Return void
+     */
+    @Override
+    public void cancelOrder(Long orderId, String status) {
+        //校验参数
+        if (orderId == null) {
+            return;
+        }
+        //查询订单信息
+        OrderInfo orderInfo = orderInfoMapper.selectById(orderId);
+        //判断该订单是否存在
+        if (orderInfo == null || orderInfo.getId() == null) {
+            return;
+        }
+        //防止用户一边取消一边付款，所以要先关闭交易，才能取消
+        if (payFeign.closePay(orderId + "")) {
+            //判断订单状态（未付款），解决幂等性问题
+            if (!orderInfo.getOrderStatus().equals(OrderStatus.UNPAID.getComment())) {
+                return;
+            }
+            //修改订单的状态（已付款）
+            orderInfo.setOrderStatus(status);
+            orderInfo.setProcessStatus(status);
+            //保存到数据库
+            orderInfoMapper.updateById(orderInfo);
+            //回滚库存，先查订单详情
+            restoreInventory(orderId);
+        }
+    }
+
+    /**
+     * @ClassName OrderInfoServiceImpl
+     * @Description 修改订单的支付状态
+     * @Author wujijun
+     * @Date 2022/1/21 22:53
+     * @Param [map, payWay]
+     * @Return void
+     */
+    @Override
+    public void updateOrderStatus(Map<String, String> map, String payWay) {
+        String tradeNo = "";
+        //获取支付的渠道（微信 or 支付宝）
+        if (payWay.equals(PaymentType.WEIXIN.getComment())) {
+            //微信支付的渠道
+            if (map.get("return_code").equals("SUCCESS")
+                    && map.get("result_code").equals("SUCCESS")) {
+                //判断是否支付成功，成功后获取支付的交易号
+                tradeNo = map.get("transaction_id");
+            }
+        } else if (payWay.equals(PaymentType.ALIPAY.getComment())) {
+            //支付宝支付的渠道
+            if (map.get("trade_status").equals("TRADE_SUCCESS")) {
+                //获取支付宝中的交易号
+                tradeNo = map.get("trade_no");
+            }
+        }
+        //获取订单号
+        String orderId = map.get(" out_trade_no");
+        //通过订单号查询订单
+        OrderInfo orderInfo = orderInfoMapper.selectById(orderId);
+        //判断状态是不是未支付的，防止幂等性问题
+        if (orderInfo.getOrderStatus().equals(OrderStatus.UNPAID.getComment())) {
+            //修改订单状态
+            orderInfo.setOrderStatus(OrderStatus.PAID.getComment());
+            //修改进度状态
+            orderInfo.setProcessStatus(OrderStatus.PAID.getComment());
+            //设置第三方的支付信息
+            orderInfo.setOutTradeNo(tradeNo);
+            orderInfo.setTradeBody(JSONObject.toJSONString(map));
+            //修改订单
+            orderInfoMapper.updateById(orderInfo);
+        }
+
+    }
+
+    /**
+     * @ClassName OrderInfoServiceImpl
+     * @Description 回滚库存
+     * @Author wujijun
+     * @Date 2022/1/20 23:45
+     * @Param [orderId]
+     * @Return void
+     */
+    private void restoreInventory(Long orderId) {
+        List<OrderDetail> orderDetails = orderDetailMapper.selectList(
+                new LambdaQueryWrapper<OrderDetail>().eq(OrderDetail::getOrderId, orderId));
+        //需要回滚库存的map
+        Map<String, Object> params = new ConcurrentHashMap<>();
+        //遍历订单详情，回滚数据
+        orderDetails.stream().forEach(orderDetail -> {
+            //获取商品id
+            Long skuId = orderDetail.getSkuId();
+            //获取商品数量
+            Integer skuNum = orderDetail.getSkuNum();
+            //保存需要回滚的信息
+            params.put(skuId + "", skuNum);
+        });
+        //库存回滚
+        productFeign.rollBackStock(params);
     }
 
     /**

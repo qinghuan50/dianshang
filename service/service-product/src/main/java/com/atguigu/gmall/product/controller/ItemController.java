@@ -163,5 +163,17 @@ public class ItemController {
         return itemService.delCountStock(orderDetails);
     }
 
+    /**
+     * @ClassName ItemController
+     * @Description 取消订单回滚库存
+     * @Author wujijun
+     * @Date 2022/1/21 0:00
+     * @Param [orderDetails]
+     * @Return java.lang.Boolean
+     */
+    @GetMapping("/rollBackStock")
+    public Boolean rollBackStock(@RequestParam Map<String, Object> orderDetails){
+        return itemService.rollBackStock(orderDetails);
+    }
 
 }

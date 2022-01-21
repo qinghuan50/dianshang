@@ -14,6 +14,16 @@ feign:
         readTimeout: 3000
         connectTimeout: 1000
 spring:
+  rabbitmq:
+    host: 192.168.200.128
+    port: 5672
+    username: wujijun
+    password: wujijun
+    virtual-host: /wujijun
+    publisher-returns: true
+    listener:
+      simple:
+        acknowledge-mode: manual
   zipkin:
     base-url: http://192.168.200.128:9411
     discovery-client-enabled: false

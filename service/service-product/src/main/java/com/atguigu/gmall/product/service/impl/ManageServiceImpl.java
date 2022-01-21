@@ -8,6 +8,7 @@ import com.atguigu.gmall.product.service.ManageService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -70,6 +71,9 @@ public class ManageServiceImpl implements ManageService {
 
     @Autowired
     ListFeign listFeign;
+
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
 
 
     /**
@@ -425,12 +429,16 @@ public class ManageServiceImpl implements ManageService {
         if (update <= 0) {
             throw new RuntimeException("商品上下架失败！");
         }
+        //可以用rabbitmq，改为生产者
+
         //上架商品需要把商品的信息存入es中；
         if (ProductConst.SKUINFO_STATUS_ONSALE.equals(status)) {
-            listFeign.add(skuId);
+//            listFeign.add(skuId);
+            rabbitTemplate.convertAndSend("sku_up_down_exchange", "sku.upper", skuId + "");
         }else {
             //下架则需要从es删除商品信息;
-            listFeign.del(skuId);
+//            listFeign.del(skuId);
+            rabbitTemplate.convertAndSend("sku_up_down_exchange", "sku.down", skuId + "");
         }
     }
 

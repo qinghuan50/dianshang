@@ -26,4 +26,15 @@ public interface SkuInfoMapper extends BaseMapper<SkuInfo> {
      */
     @Update("UPDATE sku_info SET stock = stock - #{num} WHERE id = #{skuId} AND stock >= #{num};")
     int delCountStock(@Param("skuId") Long skuId, @Param("num") Integer num);
+
+    /**
+     * @ClassName SkuInfoMapper
+     * @Description 取消订单，回滚库存
+     * @Author wujijun
+     * @Date 2022/1/20 23:52
+     * @Param [skuId, num]
+     * @Return int
+     */
+    @Update("UPDATE sku_info SET stock = stock + #{num} WHERE id = #{skuId};")
+    int rollBackStock(@Param("skuId") Long skuId, @Param("num") Integer num);
 }

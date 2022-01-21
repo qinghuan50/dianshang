@@ -119,5 +119,16 @@ public interface ProductFeign {
     @GetMapping("/delCountStock")
     Boolean delCountStock(@RequestParam Map<String, Object> orderDetails);
 
+    /**
+     * @ClassName ProductFeign
+     * @Description 取消订单，回滚库存
+     * @Author wujijun
+     * @Date 2022/1/21 0:01
+     * @Param [orderDetails]
+     * @Return java.lang.Boolean
+     */
+    @GetMapping("/rollBackStock")
+    Boolean rollBackStock(@RequestParam Map<String, Object> orderDetails);
+
 
 }

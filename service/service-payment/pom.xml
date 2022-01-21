@@ -9,27 +9,24 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>service-order</artifactId>
+    <artifactId>service-payment</artifactId>
 
-    <description>订单的微服务</description>
+    <description>支付微服务</description>
 
     <dependencies>
 
+        <!--微信支付-->
         <dependency>
-            <groupId>com.wjj</groupId>
-            <artifactId>service-cart-client</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <groupId>com.github.wxpay</groupId>
+            <artifactId>wxpay-sdk</artifactId>
+            <version>0.0.3</version>
         </dependency>
 
+        <!--导入支付宝支付sdk-->
         <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-oauth2</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>com.wjj</groupId>
-            <artifactId>service-product-client</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <groupId>com.alipay.sdk</groupId>
+            <artifactId>alipay-sdk-java</artifactId>
+            <version>4.8.73.ALL</version>
         </dependency>
 
         <dependency>
@@ -37,16 +34,10 @@
             <artifactId>spring-boot-starter-amqp</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>com.wjj</groupId>
-            <artifactId>service-pay-client</artifactId>
-            <version>1.0-SNAPSHOT</version>
-        </dependency>
-
     </dependencies>
 
     <build>
-        <finalName>service-order</finalName>
+        <finalName>service-payment</finalName>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
@@ -54,6 +45,5 @@
             </plugin>
         </plugins>
     </build>
-
 
 </project>

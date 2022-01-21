@@ -128,4 +128,14 @@ public interface ItemService {
      */
     Boolean delCountStock(Map<String, Object> orderDetails);
 
+    /**
+     * @ClassName ItemService
+     * @Description 取消订单，回滚库存
+     * @Author wujijun
+     * @Date 2022/1/20 23:50
+     * @Param [orderDetails]
+     * @Return java.lang.Boolean
+     */
+    Boolean rollBackStock(Map<String, Object> orderDetails);
+
 }

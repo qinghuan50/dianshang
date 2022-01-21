@@ -4,11 +4,9 @@ import com.atguigu.gmall.common.result.Result;
 import com.atguigu.gmall.model.enums.OrderStatus;
 import com.atguigu.gmall.model.order.OrderInfo;
 import com.atguigu.gmall.order.service.OrderInfoService;
+import com.sun.org.apache.regexp.internal.RE;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * @Author: wujijun
@@ -33,5 +31,19 @@ public class OrderInfoController {
     @PostMapping("/addOrder")
     public Result addOrder(@RequestBody OrderInfo orderInfo){
         return Result.ok(orderInfoService.addOrder(orderInfo));
+    }
+
+    /**
+     * @ClassName OrderInfoController
+     * @Description 用户主动取消订单
+     * @Author wujijun
+     * @Date 2022/1/20 23:12
+     * @Param [order, status]
+     * @Return com.atguigu.gmall.common.result.Result
+     */
+    @GetMapping("/cancelOrder")
+    public Result cancelOrder(Long orderId){
+        orderInfoService.cancelOrder(orderId, OrderStatus.ACTIVE_CANCELLATION.getComment());
+        return Result.ok();
     }
 }
